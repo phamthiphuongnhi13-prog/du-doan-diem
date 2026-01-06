@@ -1,40 +1,220 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>StudyBoost</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Ứng dụng tính điểm & GPA đại học</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6fb;
+    padding:30px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    background:#fff;
+    border-radius:18px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.12);
+}
+
+.header{
+    background:linear-gradient(90deg,#2b59ff,#5f6fff);
+    color:white;
+    padding:25px;
+    border-radius:18px 18px 0 0;
+}
+
+.content{
+    padding:25px;
+}
+
+.subject{
+    background:#f9fbff;
+    border:1px solid #e0e6f0;
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:18px;
+}
+
+.row{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:10px;
+    margin-bottom:10px;
+}
+
+input{
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:14px;
+    width:100%;
+}
+
+input[readonly]{
+    background:#eef2f7;
+    font-weight:bold;
+}
+
+.note{
+    font-size:13px;
+    color:#666;
+}
+
+.buttons{
+    display:flex;
+    gap:15px;
+    margin-top:20px;
+}
+
+button{
+    padding:12px 22px;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.add{background:#18a957;color:white}
+.calc{background:#2b59ff;color:white}
+.clear{background:#444;color:white}
+
+.result{
+    margin-top:25px;
+    font-size:22px;
+    font-weight:bold;
+}
+</style>
 </head>
+
 <body>
-    <h1>📚 StudyBoost</h1>
-    <p class="quote" id="quote"></p>
 
-    <div class="card">
-        <h2>📥 Nhập dữ liệu học tập</h2>
-
-        <label>Giờ học hôm nay:</label>
-        <input type="number" id="hToday">
-
-        <label>Giờ học hôm qua:</label>
-        <input type="number" id="hYesterday">
-
-        <label>Số ngày học/tuần:</label>
-        <input type="number" id="days">
-
-        <label>Số buổi nghỉ:</label>
-        <input type="number" id="absent">
-
-        <label>Điểm Quiz (0–10):</label>
-        <input type="number" id="quiz">
-
-        <label>Điểm giữa kỳ (0–10):</label>
-        <input type="number" id="mid">
-
-        <button onclick="analyze()">📊 Phân tích</button>
+<div class="container">
+    <div class="header">
+        <h2>📘 Ứng dụng tính điểm & GPA đại học</h2>
+        <p>Người dùng tự điều chỉnh % trực tiếp trên web</p>
     </div>
 
-    <div class="card result" id="result"></div>
+    <div class="content">
+        <div id="subjects"></div>
 
-    <script src="script.js"></script>
+        <div class="buttons">
+            <button class="add" onclick="addSubject()">➕ Thêm môn</button>
+            <button class="calc" onclick="calculateGPA()">📊 Tính GPA</button>
+            <button class="clear" onclick="clearAll()">🗑 Xóa tất cả</button>
+        </div>
+
+        <div class="result" id="gpaResult"></div>
+    </div>
+</div>
+
+<script>
+function scoreTo4(s){
+    if(s >= 8.5) return 4;
+    if(s >= 7) return 3;
+    if(s >= 5.5) return 2;
+    if(s >= 4) return 1;
+    return 0;
+}
+
+function rank(s){
+    if(s >= 8.5) return "A";
+    if(s >= 7) return "B";
+    if(s >= 5.5) return "C";
+    if(s >= 4) return "D";
+    return "F";
+}
+
+function addSubject(){
+    const div = document.createElement("div");
+    div.className = "subject";
+
+    div.innerHTML = `
+        <div class="row">
+            <input type="number" placeholder="Tín chỉ" class="tc">
+
+            <input type="number" placeholder="CC" class="cc" oninput="calcSubject(this)">
+            <input type="number" placeholder="%CC" class="pcc" value="10" oninput="calcSubject(this)">
+
+            <input type="number" placeholder="GK" class="gk" oninput="calcSubject(this)">
+            <input type="number" placeholder="%GK" class="pgk" value="30" oninput="calcSubject(this)">
+        </div>
+
+        <div class="row">
+            <input type="number" placeholder="CK" class="ck" oninput="calcSubject(this)">
+            <input type="number" placeholder="%CK" class="pck" value="60" oninput="calcSubject(this)">
+
+            <input type="text" placeholder="Điểm hệ 10" class="s10" readonly>
+            <input type="text" placeholder="Điểm hệ 4" class="s4" readonly>
+            <input type="text" placeholder="Xếp loại" class="rk" readonly>
+        </div>
+
+        <div class="note">⚠️ Tổng % phải bằng 100</div>
+    `;
+
+    document.getElementById("subjects").appendChild(div);
+}
+
+function calcSubject(el){
+    const box = el.closest(".subject");
+
+    const cc  = Number(box.querySelector(".cc").value)  || 0;
+    const gk  = Number(box.querySelector(".gk").value)  || 0;
+    const ck  = Number(box.querySelector(".ck").value)  || 0;
+
+    const pcc = Number(box.querySelector(".pcc").value) || 0;
+    const pgk = Number(box.querySelector(".pgk").value) || 0;
+    const pck = Number(box.querySelector(".pck").value) || 0;
+
+    if(pcc + pgk + pck !== 100){
+        box.querySelector(".s10").value = "Sai %";
+        box.querySelector(".s4").value = "";
+        box.querySelector(".rk").value = "";
+        return;
+    }
+
+    let s10 = (cc*pcc + gk*pgk + ck*pck) / 100;
+    s10 = s10.toFixed(2);
+
+    box.querySelector(".s10").value = s10;
+    box.querySelector(".s4").value = scoreTo4(s10).toFixed(1);
+    box.querySelector(".rk").value = rank(s10);
+}
+
+function calculateGPA(){
+    const subs = document.querySelectorAll(".subject");
+    let totalCredits = 0;
+    let totalPoints = 0;
+
+    subs.forEach(s => {
+        const c = Number(s.querySelector(".tc").value);
+        const s10 = Number(s.querySelector(".s10").value);
+        if(c && !isNaN(s10)){
+            totalCredits += c;
+            totalPoints += scoreTo4(s10) * c;
+        }
+    });
+
+    if(totalCredits === 0){
+        gpaResult.innerHTML = "⚠️ Chưa đủ dữ liệu để tính GPA";
+        return;
+    }
+
+    const gpa = (totalPoints / totalCredits).toFixed(2);
+    gpaResult.innerHTML = `🎯 GPA học kỳ: <span style="color:#2b59ff">${gpa}</span>`;
+}
+
+function clearAll(){
+    document.getElementById("subjects").innerHTML = "";
+    document.getElementById("gpaResult").innerHTML = "";
+}
+
+addSubject();
+</script>
+
 </body>
 </html>
+
+
