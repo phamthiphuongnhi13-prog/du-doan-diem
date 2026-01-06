@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>StudyBoost</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>📚 StudyBoost</h1>
+    <p class="quote" id="quote"></p>
+
+    <div class="card">
+        <h2>📥 Nhập dữ liệu học tập</h2>
+
+        <label>Giờ học hôm nay:</label>
+        <input type="number" id="hToday">
+
+        <label>Giờ học hôm qua:</label>
+        <input type="number" id="hYesterday">
+
+        <label>Số ngày học/tuần:</label>
+        <input type="number" id="days">
+
+        <label>Số buổi nghỉ:</label>
+        <input type="number" id="absent">
+
+        <label>Điểm Quiz (0–10):</label>
+        <input type="number" id="quiz">
+
+        <label>Điểm giữa kỳ (0–10):</label>
+        <input type="number" id="mid">
+
+        <button onclick="analyze()">📊 Phân tích</button>
+    </div>
+
+    <div class="card result" id="result"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
